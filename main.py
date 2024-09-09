@@ -7,7 +7,6 @@ from progress_bar import progress_bar
 
 
 class Reader:
-
     def __init__(self, filepath):
         self.filepath = filepath
         self.results = []
