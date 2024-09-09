@@ -20,8 +20,6 @@ class Reader:
             for self.file in os.listdir(self.filepath):
                 file_counter = file_counter + 1
 
-            # Load progress bar with the loop index and total file count
-            progress_bar(0, file_counter)
             for index, file in enumerate(self.filepath.glob("*")):
                 progress_bar(index, file_counter)
 
