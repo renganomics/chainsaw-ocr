@@ -5,7 +5,6 @@ from PIL import Image
 from pathlib import Path
 from progress_bar import progress_bar
 
-pic_path = Path("C:/Users/oreng/Pictures")
 
 class Reader:
 
@@ -31,7 +30,7 @@ class Reader:
 
 
 if __name__ == "__main__":
+    pic_path = Path("C:/Users/oreng/Pictures")
     reader = Reader(filepath=pic_path)
     reader.progress()
     reader.image_reader()
-
