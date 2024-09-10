@@ -9,4 +9,4 @@ For the past 3 years I have been a massive fan of the ongoing manga series Chain
 
 Because of these two reasons, I will be including the link to the theory below, however as i mentioned I first saw this months ago and at this time am unable to find it, but I'll make sure to update this once I do!
 
-**All in all, thank you for reading, and feel free to get in touch with any advice or questions!**
+### **All in all, thank you for reading, and feel free to get in touch with any advice or questions!**
