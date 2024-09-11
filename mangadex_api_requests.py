@@ -2,7 +2,9 @@ import os
 import requests
 
 
-class Mangadex:
+class MangaDex:
+    """Executes various requests to the MangaDex API"""
+
     def __init__(self,
                  u=os.environ["md_username"],
                  p=os.environ["md_password"],
@@ -26,7 +28,8 @@ class Mangadex:
         post = requests.post(
             "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect"
             "/token",
-            data=creds)
+            data=creds
+        )
 
         post_json = post.json()
         access_token = post_json["access_token"]
@@ -52,14 +55,15 @@ class Mangadex:
             f"{base_url}/manga/{manga_id}/feed",
             params={"translatedLanguage[]": languages},
         )
+
         filtered_by_lang = [chapter["id"] for chapter in r.json()["data"]]
         return {"language": languages,
                 "filtered chapters": filtered_by_lang}
 
 
 if __name__ == "__main__":
-    mangadex = Mangadex()
+    mangadex = MangaDex()
     chainsaw_man = mangadex.title_search()[0]
     print(chainsaw_man)
     print(mangadex.language_filter(manga_id=chainsaw_man))
-    print(mangadex.token_request())
+    # print(mangadex.token_request())
