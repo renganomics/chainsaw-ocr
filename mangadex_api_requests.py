@@ -1,10 +1,9 @@
 import os
 import requests
+import sqlite3
 
-
-class MangaDex:
-    """Executes various requests to the MangaDex API"""
-
+class TokenRequest:
+    """Executes requests to the MangaDex API"""
     def __init__(self,
                  u=os.environ["md_username"],
                  p=os.environ["md_password"],
@@ -16,8 +15,8 @@ class MangaDex:
         self.secret = secret
 
     def token_request(self):
-        """ Create POST request for authentication token using user data"""
-        creds = {
+        """Create POST request for authentication token using user data"""
+        credentials = {
             "grant_type": "password",
             "username": f"{self.u}",
             "password": f"{self.p}",
@@ -28,7 +27,7 @@ class MangaDex:
         post = requests.post(
             "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect"
             "/token",
-            data=creds
+            data=credentials
         )
 
         post_json = post.json()
@@ -36,34 +35,76 @@ class MangaDex:
         refresh_token = post_json["refresh_token"]
         return f"Access token: {access_token}\nRefresh token: {refresh_token}"
 
-    @staticmethod
-    def title_search(title="Chainsaw Man"):
+
+class Search:
+
+    def __init__(self, title="Chainsaw Man", languages="en"):
+        self.title = title
+        self.languages = languages
+        self.search_results = []
+        self.filtered_results = {}
+
+    def title_search(self):
         base_url = "https://api.mangadex.org"
 
         r = requests.get(
             f"{base_url}/manga",
-            params={"title": title}
+            params={"title": self.title}
         )
-        search_results = [manga["id"] for manga in r.json()["data"]]
-        return search_results
+        for manga in r.json()["data"]:
+            self.search_results.append(manga["id"])
+        return self.search_results
 
-    @staticmethod
-    def language_filter(manga_id, languages="en"):
+    def language_filter(self):
+        manga_id = self.search_results[0]
         base_url = "https://api.mangadex.org"
 
         r = requests.get(
             f"{base_url}/manga/{manga_id}/feed",
-            params={"translatedLanguage[]": languages},
+            params={"translatedLanguage[]": self.languages},
         )
 
-        filtered_by_lang = [chapter["id"] for chapter in r.json()["data"]]
-        return {"language": languages,
-                "filtered chapters": filtered_by_lang}
+        chapter_attributes = [chapter["attributes"] for chapter in r.json()["data"]]
+        filtered_chapter_ids = [chapter["id"] for chapter in r.json()["data"]]
+
+        self.filtered_results = {"languages": self.languages,
+                                 "chapter ids": filtered_chapter_ids,
+                                 "attributes": chapter_attributes}
+        return self.filtered_results
+
+
+class DatabaseStorage:
+
+    def __init__(self, database_path="chainsaw.db", results=None):
+        self.database_path = database_path
+        self.results = results
+
+        if results is None:
+            search = Search()
+            search.title_search()
+            search.language_filter()
+            self.results = search.filtered_results
+
+        connection = sqlite3.connect(self.database_path)
+        cursor = connection.cursor()
+
+        count = 0
+        for attribute in self.results["attributes"]:
+            volume_number = attribute["volume"]
+            chapter_number = attribute["chapter"]
+            chapter_title = attribute["title"]
+            chapter_id = self.results["chapter ids"]
+            cursor.execute("INSERT INTO chapters (volume_number, "
+                           "chapter_number, chapter_title, chapter_id) VALUES (?,?,?,?)",
+                           (volume_number, chapter_number, chapter_title, chapter_id[count]))
+            count = count + 1
+
+        connection.commit()
 
 
 if __name__ == "__main__":
-    mangadex = MangaDex()
-    chainsaw_man = mangadex.title_search()[0]
-    print(chainsaw_man)
-    print(mangadex.language_filter(manga_id=chainsaw_man))
-    # print(mangadex.token_request())
+    # search = Search("Chainsaw Man", "en")
+    # search.title_search()
+    # search.language_filter()
+    # store = DatabaseStorage(database_path="chainsaw.db", results=search.filtered_results)#
+    DatabaseStorage()

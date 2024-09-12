@@ -7,14 +7,12 @@ from progress_bar import progress_bar
 
 
 class Reader:
-
+    """Reads through permitted images in chosen directory for text"""
     def __init__(self, filepath):
         self.filepath = filepath
         self.results = []
 
     def image_reader(self):
-        """Loads progress bar while reading through permitted images in a
-        directory"""
 
         try:
             # Get total file count of directory
@@ -34,36 +32,36 @@ class Reader:
                 except (PermissionError, Image.UnidentifiedImageError):
                     continue
 
-            extracted_text = [result for result in self.results]
-            return extracted_text
-
         except (FileNotFoundError, NotADirectoryError):
             print("This directory does not exist.")
 
+        return self.results
+
 
 class Writer:
-
-    def __init__(self, filepath, results):
+    """Writes results of Reader class to text file of user's choice"""
+    def __init__(self, filepath, reader_results):
         self.filepath = filepath
-        self.results = results
+        self.reader_results = reader_results
 
-    def doc_writer(self, filename):
+    def file_generator(self, filename):
         if not os.path.exists(self.filepath):
             os.makedirs(self.filepath)
         with open(f"{self.filepath}/{filename}", "w") as file:
-            for line in self.results:
+            for line in self.reader_results:
                 file.write(line)
             file.close()
 
 
 if __name__ == "__main__":
-    # prompt = input("Please enter a directory: ")
-    test_read = "C:/Users/oreng/Pictures/"
-    test_write = "D:/Projects/personal_projects/chainsaw-ocr"
-    test_name = "test"
-    pic_path = Path(test_read)
+    read_path = input("Enter a directory to scan images from: ")
+    write_path = input("Enter a directory to write extracted text to: ")
+    text_file = input("Enter a name for your file: ")
+    # test_read = "D:/Projects/personal_projects/chainsaw-ocr"
+    # test_write = "D:/Projects/personal_projects/chainsaw-ocr"
 
+    pic_path = Path(read_path)
     reader = Reader(filepath=pic_path)
     reader.image_reader()
-    writer = Writer(test_write, reader.image_reader())
-    writer.doc_writer("test.txt")
+    writer = Writer(write_path, reader.results)
+    writer.file_generator(f"{text_file}.txt")
