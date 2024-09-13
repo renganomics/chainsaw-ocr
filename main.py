@@ -8,12 +8,15 @@ from progress_bar import progress_bar
 
 class Reader:
     """Reads through permitted images in chosen directory for text"""
-    def __init__(self, filepath):
-        self.filepath = filepath
+
+    def __init__(self, filepath=None):
+        if filepath is None or filepath == "":
+            self.filepath = "chainsaw-man-1.png"
+        elif filepath is not None or filepath != "":
+            self.filepath = filepath
         self.results = []
 
     def image_reader(self):
-
         try:
             # Get total file count of directory
             file_counter = 0
@@ -40,14 +43,27 @@ class Reader:
 
 class Writer:
     """Writes results of Reader class to text file of user's choice"""
+
     def __init__(self, filepath, reader_results):
-        self.filepath = filepath
+    # Create default filepath value if parameter left blank
+        if filepath == "":
+            self.filepath = "reader_results"
+        else:
+            self.filepath = filepath
+
         self.reader_results = reader_results
 
-    def file_generator(self, filename):
-        if not os.path.exists(self.filepath):
+    def file_generator(self, filename=None):
+    # Creates default filename value if parameter left blank
+        if filename is None or filename == "":
+            filename = "results"
+        elif filename is not None or filename != "":
+            filename = filename
+
+        elif not os.path.exists(self.filepath):
             os.makedirs(self.filepath)
-        with open(f"{self.filepath}/{filename}", "w") as file:
+
+        with open(f"{self.filepath}/{filename}.txt", "w") as file:
             for line in self.reader_results:
                 file.write(line)
             file.close()
@@ -64,4 +80,4 @@ if __name__ == "__main__":
     reader = Reader(filepath=pic_path)
     reader.image_reader()
     writer = Writer(write_path, reader.results)
-    writer.file_generator(f"{text_file}.txt")
+    writer.file_generator()

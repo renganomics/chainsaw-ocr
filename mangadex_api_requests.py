@@ -4,6 +4,7 @@ import requests
 
 
 class TokenRequest:
+
     """Executes requests to the MangaDex API"""
     def __init__(self,
                  u=os.environ["md_username"],
@@ -30,6 +31,7 @@ class TokenRequest:
             "/token",
             data=credentials
         )
+
     # Return access and refresh tokens
         post_json = post.json()
         access_token = post_json["access_token"]
@@ -39,6 +41,7 @@ class TokenRequest:
 
 class Search:
     """Conduct searches through API using user input"""
+
     def __init__(self, title="Chainsaw Man", languages="en"):
     # Create default parameter for title if left blank
         if title == "":
@@ -57,6 +60,7 @@ class Search:
             f"{base_url}/manga",
             params={"title": self.title}
         )
+
     # Compiles results into list
         for manga in r.json()["data"]:
             self.search_results.append(manga["id"])
@@ -70,6 +74,7 @@ class Search:
             f"{base_url}/manga/{manga_id}/feed",
             params={"translatedLanguage[]": self.languages},
         )
+
     # Compile dictionaries of selected data
         chapter_attributes = [chapter["attributes"] for chapter in r.json()["data"]]
         filtered_chapter_ids = [chapter["id"] for chapter in r.json()["data"]]
@@ -82,6 +87,7 @@ class Search:
 
 class DatabaseStorage:
     """Writes retrieved data to database of user's choice"""
+
     def __init__(self, database_path=None, results=None):
         self.database_path = database_path
 
@@ -116,6 +122,7 @@ class DatabaseStorage:
                 "chapter_id TEXT,"
                 "link TEXT)"
             )
+
         # Populate rows in each column with appropriate data
             for attribute in self.results["attributes"]:
                 volume_number = attribute["volume"]
@@ -138,6 +145,7 @@ class DatabaseStorage:
                 )
                 count = count + 1
             connection.commit()
+
     # If path exists already, raise exception
         elif os.path.exists(f"{self.database_path}.db"):
             raise FileExistsError("This path already exists.")
