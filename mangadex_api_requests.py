@@ -16,7 +16,7 @@ class TokenRequest:
         self.secret = secret
 
     def token_request(self):
-        """Create POST request for authentication token using user data"""
+    # Create POST request for authentication token using user data
         credentials = {
             "grant_type": "password",
             "username": f"{self.u}",
@@ -30,7 +30,7 @@ class TokenRequest:
             "/token",
             data=credentials
         )
-
+    # Return access and refresh tokens
         post_json = post.json()
         access_token = post_json["access_token"]
         refresh_token = post_json["refresh_token"]
