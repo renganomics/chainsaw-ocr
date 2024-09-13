@@ -107,7 +107,7 @@ class DatabaseStorage:
         elif self.database_path is not None:
             self.database_path = self.database_path
 
-    # If path does not already exist, write to it
+    # If path does not already exist, create and write to it
         count = 0
         if not os.path.exists(f"{self.database_path}.db"):
             connection = sqlite3.connect(f"{self.database_path}.db")
@@ -152,11 +152,10 @@ class DatabaseStorage:
 
 
 if __name__ == "__main__":
-    search_prompt = input("Enter a manga title: ")
-    search = Search(search_prompt, "en")
+    search = Search(input("Enter a manga title: "))
     search.title_search()
     search.language_filter()
-    db_path_prompt = input("Enter a path for the database to be stored: ")
-    store = DatabaseStorage(database_path=db_path_prompt,
-                            results=search.filtered_results)
+    store = DatabaseStorage(
+        database_path=input("Enter a path for the database to be stored: "),
+        results=search.filtered_results)
     store.write_to_db()
