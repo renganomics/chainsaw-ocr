@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import requests
+from numpy.ma.core import argsort
 
 BASE_API_URL = "https://api.mangadex.org"
 DEFAULT_TITLE = "Chainsaw Man"
@@ -52,7 +53,8 @@ class Search:
         if r:
             for manga in r["data"]:
                 self.search_results.append(manga["id"])
-            print(f"Found {len(self.search_results)} results for '{self.title}'")
+            print(f"Found {len(self.search_results)} results for "
+                  f"'{self.title}'")
         else:
             print(f"Failed to retrieve search results for {self.title}")
         return self.search_results
@@ -102,26 +104,36 @@ class DatabaseStorage:
             with sqlite3.connect(f"{database_path}.db") as connection:
                 cursor = connection.cursor()
                 self.create_table(cursor)
-                print(f"Table 'chapters' created")
                 self.insert_chapters(cursor)
-                print(f"Table 'chapters' populated")
+                cursor.execute("SELECT * FROM chapters ORDER BY chapter_number\
+                 ASC")
                 connection.commit()
                 print(f"Database path is: '{database_path}.db'")
+                return database_path
         except sqlite3.Error as e:
             print(f"SQLite error: {e}")
 
     @staticmethod
-    def create_table(cursor):
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS chapters("
-            "volume_number INTEGER,"
-            "chapter_number INTEGER,"
-            "chapter_title TEXT,"
-            "chapter_id TEXT,"
-            "link TEXT)"
-        )
+    def create_table(cursor, table=None, columns=None):
+        if columns is None:
+            columns = ("volume_number INTEGER, "
+                       "chapter_number INTEGER, "
+                       "chapter_title TEXT, "
+                       "chapter_id TEXT, "
+                       "link TEXT")
 
-    def insert_chapters(self, cursor):
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS {table}({columns})")
+
+    def insert_chapters(self, cursor, table=None, columns=None, values=None):
+        if columns is None:
+            columns = ("volume_number, "
+                       "chapter_number, "
+                       "chapter_title, "
+                       "chapter_id, "
+                       "link")
+        if values is None:
+            values = "?, ?, ?, ?, ?"
+
         base_chapter_url = "https://mangadex.org/chapter"
 
         for index, attribute in enumerate(self.results["attributes"]):
@@ -131,11 +143,40 @@ class DatabaseStorage:
             chapter_id = self.results["chapter ids"]
 
             cursor.execute(
-                "INSERT INTO chapters (volume_number, chapter_number, "
-                "chapter_title, chapter_id, link) VALUES (?, ?, ?, ?, ?)",
+                f"INSERT INTO {table} ({columns}) VALUES ({values})",
                 (volume_number, chapter_number, chapter_title,
-                 chapter_id[index], f"{base_chapter_url}/{chapter_id[index]}")
-            )
+                 chapter_id[index], f"{base_chapter_url}/{chapter_id[index]}"))
+
+
+class Downloader:
+
+    BASE_META_URL = "https://api.mangadex.org/at-home/server"
+
+    def __init__(self, database_path=None):
+        _db = DatabaseStorage() if not database_path else None
+        if _db:
+            self.database_path = "results"
+        else:
+            self.database_path = database_path
+        self.links = None
+
+    def get_metadata(self, chapter_id):
+        r = requests.get(f"{self.BASE_META_URL}/{chapter_id}").json()
+
+        if r:
+            try:
+                base_url = r["baseUrl"]
+                page_hash = r["chapter"]["hash"]
+                page_data = r["chapter"]["data"]
+
+                links = [f"{base_url}/{page_hash}/data/{page}"
+                         for page in page_data]
+                return links
+
+            except KeyError as e:
+                print(f"KeyError with link: {e}")
+        else:
+            print("This link produced no results")
 
 
 if __name__ == "__main__":
@@ -149,3 +190,7 @@ if __name__ == "__main__":
 
     store = DatabaseStorage(data=search.filtered_results)
     store.write_to_db()
+
+
+    dldr = Downloader()
+    # dldr.get_metadata()
