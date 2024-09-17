@@ -9,11 +9,8 @@ from progress_bar import progress_bar
 class Reader:
     """Reads through permitted images in chosen directory for text"""
 
-    def __init__(self, filepath=None):
-        if filepath is None or filepath == "":
-            self.filepath = "chainsaw-man-1.png"
-        elif filepath is not None or filepath != "":
-            self.filepath = filepath
+    def __init__(self, filepath: Path = "chainsaw-man-1.png"):
+        self.filepath = filepath
         self.results = []
 
     def image_reader(self):
@@ -44,40 +41,31 @@ class Reader:
 class Writer:
     """Writes results of Reader class to text file of user's choice"""
 
-    def __init__(self, filepath, reader_results):
-    # Create default filepath value if parameter left blank
-        if filepath == "":
-            self.filepath = "reader_results"
-        else:
-            self.filepath = filepath
+    def __init__(self, reader_results: list[str],
+                 filepath: str =f"{os.getcwd()}/reader_results"):
+
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+            os.chdir(filepath)
+        self.filepath = filepath
 
         self.reader_results = reader_results
 
-    def file_generator(self, filename=None):
-    # Creates default filename value if parameter left blank
-        if filename is None or filename == "":
-            filename = "results"
-        elif filename is not None or filename != "":
-            filename = filename
-
-        elif not os.path.exists(self.filepath):
-            os.makedirs(self.filepath)
+    def file_generator(self, filename: str = "results"):
 
         with open(f"{self.filepath}/{filename}.txt", "w") as file:
             for line in self.reader_results:
                 file.write(line)
             file.close()
 
+        print(f"Your file is stored in {self.filepath}/{filename}")
+
 
 if __name__ == "__main__":
-    read_path = input("Enter a directory to scan images from: ")
-    write_path = input("Enter a directory to write extracted text to: ")
+    read_path = Path(input("Enter a directory to scan images from: "))
     text_file = input("Enter a name for your file: ")
-    # test_read = "D:/Projects/personal_projects/chainsaw-ocr"
-    # test_write = "D:/Projects/personal_projects/chainsaw-ocr"
 
-    pic_path = Path(read_path)
-    reader = Reader(filepath=pic_path)
+    reader = Reader(filepath=read_path)
     reader.image_reader()
-    writer = Writer(write_path, reader.results)
-    writer.file_generator()
+    writer = Writer(reader.results)
+    writer.file_generator(text_file)
