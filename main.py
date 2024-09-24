@@ -1,15 +1,41 @@
+import requests
+
+
 class MangaDexRequests:
 
-    BASE_URL = ...
-    def __init__(self, title, language):
-        self.title = title
-        self.language = language
+    def __init__(self):
+        self.chapter_data = {}
+
+    def get_manga_data(self, title, language):
+
+        base_url = "https://api.mangadex.org"
+
+        mangas = requests.get(
+            f"{base_url}/manga",
+            params={"title": title}
+        )
+        manga_id = [manga["id"] for manga in mangas.json()["data"]][0]
+
+        chapters = requests.get(
+            f"{base_url}/manga/{manga_id}/feed",
+            params={"translatedLanguage[]": language,
+                    "order[chapter]": "asc"}
+        )
+        # print(chapters.json())
+        chapter_ids = [chapter["id"] for chapter in chapters.json()["data"] if
+                       chapter["attributes"]["externalUrl"] is None]
+        attributes = [chapter["attributes"] for chapter in
+                      chapters.json()["data"] if chapter["attributes"]
+                      ["externalUrl"] is None]
+        self.chapter_data = {"id": chapter_ids, "attributes": attributes}
+        return self.chapter_data
 
     def get_page_metadata(self, chapter_id):
         pass
 
     def download_url(self, image_url, filepath):
         pass
+
 
 class Database:
 
@@ -45,3 +71,8 @@ class ImageReader:
 
     def store_text(self, results):
         pass
+
+
+if __name__ == "__main__":
+    mdx = MangaDexRequests()
+    print(mdx.get_manga_data("chainsaw man", "en"))
