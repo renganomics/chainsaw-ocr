@@ -9,9 +9,9 @@ store results to a text file corresponding to the chapter.
 Objects:
     MangaDexRequests:
         BASE_URL
-        title_search
-        language_filter
-        get_chapter_metadata(chapter_id)
+        title
+        language
+        get_page_metadata(chapter_id)
             BASE_URL
         download_url(image_url, filepath)
     Database:
@@ -19,7 +19,7 @@ Objects:
         create_table(name, columns)
         insert_data(table, columns, values, data)
     PageUrls(Database):
-        cursor
+        cursor(Database)
         retrieve_chapter_ids(table, columns)
         create_table(name, columns)
         insert_data(table, columns, values, data)
