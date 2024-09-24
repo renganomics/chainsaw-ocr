@@ -1,4 +1,8 @@
 import requests
+import sqlite3
+
+from ratelimit import limits, sleep_and_retry
+from tqdm import tqdm
 
 BASE_URL = "https://api.mangadex.org"
 
@@ -37,6 +41,9 @@ class MangaDexRequests:
         self.chapter_data = {"id": chapter_ids, "attributes": attributes}
         return self.chapter_data
 
+    # Add rate limit with extra 5-second buffer and retry after rest period
+    @sleep_and_retry
+    @limits(calls=40, period=65)
     def get_page_metadata(self, chapter_id):
 
         metadata = requests.get(
@@ -69,26 +76,18 @@ class MangaDexRequests:
 
 class Database:
 
-    def __init__(self, cursor):
-        self.cursor = cursor
+    def __init__(self, database_path):
+        with sqlite3.connect(f"{database_path}.db") as self.connection:
+            self.cursor = self.connection.cursor()
 
     def create_table(self, name, columns):
-        pass
+        self.cursor.execute(f"CREATE TABLE {name} ({columns})")
+        self.connection.commit()
 
     def insert_data(self, table, columns, values, data):
-        pass
-
-
-class PageUrls(Database):
-
-    def retrieve_chapter_ids(self, table, columns):
-        pass
-
-    def create_table(self, name, columns):
-        pass
-
-    def insert_data(self, table, columns, values, data):
-        pass
+        self.cursor.execute(f"INSERT INTO {table} ({columns}) VALUES "
+                            f"({values})", data)
+        self.connection.commit()
 
 
 class ImageReader:
@@ -106,6 +105,47 @@ class ImageReader:
 if __name__ == "__main__":
     mdx = MangaDexRequests()
     mdx.get_manga_data(title="chainsaw man", language="en")
-    mdx.get_page_metadata(chapter_id="73af4d8d-1532-4a72-b1b9-8f4e5cd295c9")
-    print(mdx.page_links)
-    mdx.download_url(image_url=mdx.page_links[-1], filename="test")
+
+    db = Database("test")
+    try:
+        db.create_table(name="chapters",
+                        columns="volume_number INTEGER,"
+                                "chapter_number INTEGER,"
+                                "title TEXT,"
+                                "chapter_id TEXT,"
+                                "chapter_link TEXT"
+                            )
+
+        for index, chapter in enumerate(mdx.chapter_data["attributes"]):
+            db.insert_data(table="chapters",
+                           columns="volume_number,"
+                                   "chapter_number,"
+                                   "title,"
+                                   "chapter_id,"
+                                   "chapter_link",
+                           values="?,?,?,?,?",
+                           data=(chapter["volume"],
+                                 chapter["chapter"],
+                                 chapter["title"],
+                                 mdx.chapter_data["id"][index],
+                                 f"https://mangadex.org/chapter/"
+                                 f"{mdx.chapter_data["id"][index]}")
+                           )
+    except sqlite3.OperationalError as e:
+        print(e)
+
+    page_urls = [mdx.get_page_metadata(chapter_id=chapter) for chapter in
+                 tqdm(mdx.chapter_data["id"])]
+    print(page_urls)
+
+    # mdx.download_url(image_url=mdx.page_links[-1], filename="test")
+
+    # try:
+    #     db.create_table(name="page_links",
+    #                     columns="volume_number INTEGER,"
+    #                             "chapter_number INTEGER,"
+    #                             "title TEXT,"
+    #                             "link TEXT")
+    #
+    # except sqlite3.OperationalError as e:
+    #     print(e)

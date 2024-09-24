@@ -12,12 +12,7 @@ Objects:
         get_page_metadata(chapter_id)
         download_url(image_url, filepath)
     Database:
-        cursor
-        create_table(name, columns)
-        insert_data(table, columns, values, data)
-    PageUrls(Database):
-        cursor(Database)
-        retrieve_chapter_ids(table, columns)
+        database_path
         create_table(name, columns)
         insert_data(table, columns, values, data)
     ImageReader:
