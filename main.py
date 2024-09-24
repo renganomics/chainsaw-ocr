@@ -7,47 +7,64 @@ class MangaDexRequests:
 
     def __init__(self):
         self.chapter_data = {}
+        self.page_links = []
 
     def get_manga_data(self, title, language):
 
-        mangas = requests.get(
+        # Retrieve all manga ids that correspond to title and save first result
+        manga_response = requests.get(
             f"{BASE_URL}/manga",
             params={"title": title}
         )
-        manga_id = [manga["id"] for manga in mangas.json()["data"]][0]
+        manga_id = [manga["id"] for manga in manga_response.json()["data"]][0]
 
-        chapters = requests.get(
+        # Retrieve all chapters in given language
+        chapter_response = requests.get(
             f"{BASE_URL}/manga/{manga_id}/feed",
             params={"translatedLanguage[]": language,
                     "order[chapter]": "asc"}
         )
-        # print(chapters.json())
 
-        chapter_ids = [chapter["id"] for chapter in chapters.json()["data"]
-                       if chapter["attributes"]["externalUrl"] is None]
+        # Only save data if the chapter is hosted on the MangaDex site
+        chapter_ids = [chapter["id"] for chapter in
+                       chapter_response.json()["data"] if chapter["attributes"]
+                       ["externalUrl"] is None]
         attributes = [chapter["attributes"] for chapter in
-                      chapters.json()["data"] if chapter["attributes"]
+                      chapter_response.json()["data"] if chapter["attributes"]
                       ["externalUrl"] is None]
+
+        # Save results to dictionary
         self.chapter_data = {"id": chapter_ids, "attributes": attributes}
         return self.chapter_data
 
-    @staticmethod
-    def get_page_metadata(chapter_id):
+    def get_page_metadata(self, chapter_id):
 
         metadata = requests.get(
             f"{BASE_URL}/at-home/server/{chapter_id}"
         )
-        # print(metadata.json())
+
+        # Retrieve required fields to build image url
         base_url = metadata.json()["baseUrl"]
         chapter_hash = metadata.json()["chapter"]["hash"]
         chapter_data = metadata.json()["chapter"]["data"]
 
-        page_links = [f"{base_url}/data/{chapter_hash}/{page}" for page in
-                      chapter_data]
-        return page_links
+        # Save results to list
+        self.page_links = [f"{base_url}/data/{chapter_hash}/{page}" for page in
+                           chapter_data]
+        return self.page_links
 
-    def download_url(self, image_url, filepath):
-        pass
+    @staticmethod
+    def download_url(image_url, filename):
+        image_response = requests.get(image_url)
+
+        # If request is successful write image data to png file
+        if image_response.status_code != 200:
+            print(f"Failed to download image, status code: "
+                  f"{image_response.status_code}")
+        else:
+            with open(f"{filename}.png", "wb") as file:
+                file.write(image_response.content)
+            print("Image successfully downloaded.")
 
 
 class Database:
@@ -88,5 +105,7 @@ class ImageReader:
 
 if __name__ == "__main__":
     mdx = MangaDexRequests()
-    mdx.get_manga_data("chainsaw man", "en")
-    print(mdx.get_page_metadata("73af4d8d-1532-4a72-b1b9-8f4e5cd295c9"))
+    mdx.get_manga_data(title="chainsaw man", language="en")
+    mdx.get_page_metadata(chapter_id="73af4d8d-1532-4a72-b1b9-8f4e5cd295c9")
+    print(mdx.page_links)
+    mdx.download_url(image_url=mdx.page_links[-1], filename="test")
