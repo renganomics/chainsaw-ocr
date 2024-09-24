@@ -1,0 +1,32 @@
+Title: Chainsaw-OCR
+Description: An app that searches the MangaDex API for a manga series,
+returns the results in chosen language, and stores the chapter information in a
+database. The app will then use chapter info from database to retrieve url data
+for chapter pages for downloading. These links will be stored in another table
+in the same database as the images are downloaded to a location of the user's
+choice. From there the app will scan through selected chapters for text and
+store results to a text file corresponding to the chapter.
+Objects:
+    MangaDexRequests:
+        BASE_URL
+        title_search
+        language_filter
+        get_chapter_metadata(chapter_id)
+            BASE_URL
+        download_url(image_url, filepath)
+    Database:
+        cursor
+        create_table(name, columns)
+        insert_data(table, columns, values, data)
+    PageUrls(Database):
+        cursor
+        retrieve_chapter_ids(table, columns)
+        create_table(name, columns)
+        insert_data(table, columns, values, data)
+    ImageReader:
+        filepath
+        extract_text(page)
+        store_text(results)
+Notes:
+    MangaDex@Home rate limit: 40 requests per minute
+    Order request results by chapter("asc")
