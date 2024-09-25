@@ -26,14 +26,14 @@ class MangaDexRequests:
         )
         manga_id = [manga["id"] for manga in manga_response.json()["data"]][0]
 
-        # Retrieve all chapters in given language
+        # Retrieve all chapters in given language in ascending order
         chapter_response = requests.get(
             f"{BASE_URL}/manga/{manga_id}/feed",
             params={"translatedLanguage[]": languages,
                     "order[chapter]": "asc"}
         )
 
-        # Only save if chapter is hosted on the MangaDex site
+        # Only save if chapter is hosted natively on MangaDex site
         chapter_ids = [_chapter["id"] for _chapter in
                        chapter_response.json()["data"] if
                        _chapter["attributes"]["externalUrl"] is None]
@@ -113,13 +113,20 @@ class Database:
 class ImageReader:
 
     @staticmethod
-    def extract_text(image_path):
+    def extract_text(image_path, scale_factor=2):
         # Turn image greyscale to improve readability
         image = Image.open(image_path)
         grey_image = ImageOps.grayscale(image)
 
+        # Resize image to improve readability
+        resized_image = grey_image.resize(
+            (grey_image.width * scale_factor,
+             grey_image.height * scale_factor),
+            resample=Image.Resampling.LANCZOS
+        )
+
         # Extract text and store to string
-        extracted_text = pytesseract.image_to_string(grey_image)
+        extracted_text = pytesseract.image_to_string(resized_image)
         return extracted_text
 
     @staticmethod

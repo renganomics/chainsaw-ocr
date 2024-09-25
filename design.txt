@@ -5,7 +5,8 @@ database. The app will then use chapter info from database to retrieve url data
 for chapter pages for downloading. These links will be stored in another table
 in the same database as the images are downloaded to a location of the user's
 choice. From there the app will scan through selected chapters for text and
-store results to a text file corresponding to the chapter.
+store results to a text file corresponding to the chapter. The user can then
+search the results for chosen phrases.
 Objects:
     MangaDexRequests:
         get_manga_data(title, languages)
