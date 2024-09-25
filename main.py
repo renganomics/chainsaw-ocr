@@ -111,6 +111,7 @@ class Database:
 
 
 class ImageReader:
+    """Handles Tesseract-OCR interactions"""
 
     @staticmethod
     def extract_text(image_path, scale_factor=2):
@@ -142,14 +143,14 @@ class ImageReader:
 
 if __name__ == "__main__":
 
-    # Create MangaDexRequests instance and retrieve relevant manga data
     mdx = MangaDexRequests()
-    mdx.get_manga_data(title="chainsaw man", languages="en")
-
-    db = Database("test")  # Create Database instance
-
-    # Create "chapters" table if non-existent
     try:
+        mdx.get_manga_data(title="chainsaw man", languages="en")
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+
+    db = Database("test")
+    try:  # Create "chapters" table if non-existent
         db.create_table(
             name="chapters",
             columns="volume_number INTEGER,"
@@ -177,13 +178,11 @@ if __name__ == "__main__":
                       f"{mdx.chapter_data["id"][index]}")
             )
     except sqlite3.OperationalError as e:
-        print(e)  # Print error if exception
+        print(e)
 
-    # Retrieve data from chapters table for use in page_links table
     chapters_db = db.retrieve_data(table="chapters", columns="*")
 
-    # Create page_links table if non-existent
-    try:
+    try:  # Create page_links table if non-existent
         db.create_table(
             name="page_links",
             columns="volume_number INTEGER,"
@@ -194,7 +193,6 @@ if __name__ == "__main__":
         )
         print("table page_links successfully created")
 
-        # Iterate through rows in chapters table for relevant data
         for chapter in tqdm(chapters_db):
             volume_number = chapter[0]
             chapter_number = chapter[1]
@@ -213,13 +211,31 @@ if __name__ == "__main__":
                     data=(volume_number, chapter_number, chapter_title,
                           index + 1, url)
                 )
-
-                # Download each page and save to respective directory
-                mdx.download_url(
-                    image_url=url,
-                    filepath=f"test_download/volume_{volume_number}/chapter_"
-                             f"{chapter_number}",
-                    filename=f"page_{index+1}"
-                )
     except sqlite3.OperationalError as e:
-        print(e) # Print error if exception
+        print(e)
+
+    # Retrieve page_links data and establish download folder
+    page_links_data = db.retrieve_data(table="page_links", columns="*")
+    image_download_dir = "test_download"
+
+    if not os.path.exists(image_download_dir):
+        for page_link in tqdm(page_links_data):
+            volume_number = page_link[0]
+            chapter_number = page_link[1]
+            chapter_title = page_link[2].replace(" ", "_")
+            page_number = page_link[3]
+            url = page_link[4]
+
+            # Use retrieved values to create directories within download folder
+            download_directory = (
+                f"{image_download_dir}/volume_{volume_number}/"
+                f"chapter_{chapter_number}-{chapter_title}"
+            )
+            # Download each page and save to respective directory
+            mdx.download_url(
+                image_url=url,
+                filepath=f"{download_directory}",
+                filename=f"page_{page_number}"
+            )
+    else:
+        print(f"path {image_download_dir} already exists")
