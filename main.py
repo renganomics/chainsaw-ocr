@@ -1,5 +1,6 @@
 import requests
 import sqlite3
+import os
 
 from ratelimit import limits, sleep_and_retry
 from tqdm import tqdm
@@ -29,7 +30,7 @@ class MangaDexRequests:
                     "order[chapter]": "asc"}
         )
 
-        # Only save data to lists if the chapter is hosted on the MangaDex site
+        # Only save if chapter is hosted on the MangaDex site
         chapter_ids = [_chapter["id"] for _chapter in
                        chapter_response.json()["data"] if
                        _chapter["attributes"]["externalUrl"] is None]
@@ -37,7 +38,7 @@ class MangaDexRequests:
                       chapter_response.json()["data"] if
                       _chapter["attributes"]["externalUrl"] is None]
 
-        # Save results to dictionary
+        # Save result lists to dictionary
         self.chapter_data = {"id": chapter_ids, "attributes": attributes}
         return self.chapter_data
 
@@ -61,7 +62,11 @@ class MangaDexRequests:
         return self.page_links
 
     @staticmethod
-    def download_url(image_url, filename):
+    def download_url(image_url, filepath, filename):
+        # Create filepath if non-existent
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+
         image_response = requests.get(image_url)
 
         # If request is successful write image data to png file
@@ -69,9 +74,8 @@ class MangaDexRequests:
             print(f"Failed to download image, status code: "
                   f"{image_response.status_code}")
         else:
-            with open(f"{filename}.png", "wb") as file:
+            with open(f"{filepath}/{filename}.png", "wb") as file:
                 file.write(image_response.content)
-            print("Image successfully downloaded.")
 
 
 class Database:
@@ -117,7 +121,8 @@ if __name__ == "__main__":
 
     db = Database("test")  # Create Database instance
 
-    try:  # Create "chapters" table if non-existent
+    # Create "chapters" table if non-existent
+    try:
         db.create_table(
             name="chapters",
             columns="volume_number INTEGER,"
@@ -151,7 +156,8 @@ if __name__ == "__main__":
     # Retrieve data from chapters table for use in page_links table
     chapters_db = db.retrieve_data(table="chapters", columns="*")
 
-    try:  # Create page_links table if non-existent
+    # Create page_links table if non-existent
+    try:
         db.create_table(
             name="page_links",
             columns="volume_number INTEGER,"
@@ -182,5 +188,13 @@ if __name__ == "__main__":
                     data=(volume_number, chapter_number, chapter_title,
                           index + 1, url)
                 )
+                # Download each page and save to respective directory
+                mdx.download_url(
+                    image_url=url,
+                    filepath=f"test_download/volume_{volume_number}/chapter_"
+                             f"{chapter_number}",
+                    filename=f"page_{index+1}"
+                )
     except sqlite3.OperationalError as e:
         print(e) # Print error if exception
+
