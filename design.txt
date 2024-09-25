@@ -18,6 +18,7 @@ Objects:
         insert_data(table, columns, data)
         retrieve_data(table, columns)
     ImageReader:
+        scan_folder(parent)
         extract_text(image_path)
         store_text(results, filepath, filename)
 Notes:
