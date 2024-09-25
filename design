@@ -15,6 +15,7 @@ Objects:
         database_path
         create_table(name, columns)
         insert_data(table, columns, values, data)
+        retrieve_data(table, columns)
     ImageReader:
         filepath
         extract_text(page)
