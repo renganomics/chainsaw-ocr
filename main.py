@@ -9,12 +9,13 @@ BASE_URL = "https://api.mangadex.org"
 
 
 class MangaDexRequests:
+    """Handles all interactions with the MangaDex API"""
 
     def __init__(self):
         self.chapter_data = {}
         self.page_links = []
 
-    def get_manga_data(self, title, language):
+    def get_manga_data(self, title, languages):
 
         # Retrieve all manga ids that correspond to title and save first result
         manga_response = requests.get(
@@ -26,7 +27,7 @@ class MangaDexRequests:
         # Retrieve all chapters in given language
         chapter_response = requests.get(
             f"{BASE_URL}/manga/{manga_id}/feed",
-            params={"translatedLanguage[]": language,
+            params={"translatedLanguage[]": languages,
                     "order[chapter]": "asc"}
         )
 
@@ -79,6 +80,7 @@ class MangaDexRequests:
 
 
 class Database:
+    """Handles all database interactions"""
 
     def __init__(self, database_path):
         # Establish connection and cursor using given path
@@ -96,6 +98,7 @@ class Database:
                             f"({values})", data)
         self.connection.commit()
 
+    # Retrieve relevant data from chosen table and columns
     def retrieve_data(self, table, columns):
         table_data = self.cursor.execute(f"SELECT {columns} FROM {table}")
         return table_data.fetchall()
@@ -117,7 +120,7 @@ if __name__ == "__main__":
 
     # Create MangaDexRequests instance and retrieve relevant manga data
     mdx = MangaDexRequests()
-    mdx.get_manga_data(title="chainsaw man", language="en")
+    mdx.get_manga_data(title="chainsaw man", languages="en")
 
     db = Database("test")  # Create Database instance
 
@@ -188,6 +191,7 @@ if __name__ == "__main__":
                     data=(volume_number, chapter_number, chapter_title,
                           index + 1, url)
                 )
+
                 # Download each page and save to respective directory
                 mdx.download_url(
                     image_url=url,
@@ -197,4 +201,3 @@ if __name__ == "__main__":
                 )
     except sqlite3.OperationalError as e:
         print(e) # Print error if exception
-
