@@ -1,9 +1,11 @@
 import requests
 import sqlite3
 import os
+import pytesseract
 
 from ratelimit import limits, sleep_and_retry
 from tqdm import tqdm
+from PIL import Image, ImageOps
 
 BASE_URL = "https://api.mangadex.org"
 
@@ -110,14 +112,25 @@ class Database:
 
 class ImageReader:
 
-    def __init__(self, filepath):
-        self.filepath = filepath
+    @staticmethod
+    def extract_text(image_path):
+        # Turn image greyscale to improve readability
+        image = Image.open(image_path)
+        grey_image = ImageOps.grayscale(image)
 
-    def extract_text(self, page):
-        pass
+        # Extract text and store to string
+        extracted_text = pytesseract.image_to_string(grey_image)
+        return extracted_text
 
-    def store_text(self, results):
-        pass
+    @staticmethod
+    def store_text(results, filepath, filename):
+        # Create filepath if non-existent
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+
+        # Write OCR results to text file of choice
+        with open(f"{filepath}/{filename}.txt", "w") as file:
+            file.write(results)
 
 
 if __name__ == "__main__":

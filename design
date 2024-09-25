@@ -8,18 +8,17 @@ choice. From there the app will scan through selected chapters for text and
 store results to a text file corresponding to the chapter.
 Objects:
     MangaDexRequests:
-        get_manga_data(title, language)
+        get_manga_data(title, languages)
         get_page_metadata(chapter_id)
-        download_url(image_url, filepath)
+        download_url(image_url, filepath, filename)
     Database:
         database_path
         create_table(name, columns)
-        insert_data(table, columns, values, data)
+        insert_data(table, columns, data)
         retrieve_data(table, columns)
     ImageReader:
-        filepath
-        extract_text(page)
-        store_text(results)
+        extract_text(image_path)
+        store_text(results, filepath, filename)
 Notes:
     MangaDex@Home rate limit: 40 requests per minute
     Order request results by chapter("asc")
