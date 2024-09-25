@@ -93,7 +93,11 @@ class Database:
         self.connection.commit()
 
     # Insert given info to table of choice and commit changes
-    def insert_data(self, table, columns, values, data):
+    def insert_data(self, table, columns, data):
+        # Add values according to number of given data
+        data_count = len(data)
+        values = ("?," * data_count).strip(",")
+
         self.cursor.execute(f"INSERT INTO {table} ({columns}) VALUES "
                             f"({values})", data)
         self.connection.commit()
@@ -145,7 +149,6 @@ if __name__ == "__main__":
                         "title,"
                         "chapter_id,"
                         "chapter_link",
-                values="?,?,?,?,?",
                 data=(chapter["volume"],
                       chapter["chapter"],
                       chapter["title"],
@@ -187,7 +190,6 @@ if __name__ == "__main__":
                             "title,"
                             "page_number,"
                             "link",
-                    values="?,?,?,?,?",
                     data=(volume_number, chapter_number, chapter_title,
                           index + 1, url)
                 )
