@@ -144,7 +144,7 @@ class ImageReader:
         return self.png_list
 
     @staticmethod
-    def extract_text(image_path, scale_factor=2):
+    def extract_text(image_path, scale_factor=3):
         # Turn image greyscale to improve readability
         with Image.open(image_path, mode="r") as image:
             grey_image = ImageOps.grayscale(image)
@@ -155,20 +155,28 @@ class ImageReader:
                  grey_image.height * scale_factor),
                 resample=Image.Resampling.LANCZOS
             )
-
-            # Extract text and store to string
+            # Extract text and store as string
             _extracted_text = pytesseract.image_to_string(resized_image)
         return _extracted_text
 
     @staticmethod
-    def store_text(results, filepath, filename):
-        # Create filepath if non-existent
-        if not os.path.exists(filepath):
-            os.makedirs(filepath)
+    def store_text(results, filepath):
 
-        # Write OCR results to text file of choice
-        with open(f"{filepath}/{filename}.txt", "w") as file:
-            file.write(results)
+        # Remove png property from file
+        storage_path = f"text_results/{filepath.replace(".png", "")}"
+        # Separate directories from filename
+        head, sep, tail = storage_path.partition("page_")
+
+        try:
+            # Create filepath if non-existent
+            if not os.path.exists(storage_path):
+                os.makedirs(head)
+            else:
+                print("filepath already exists")
+        except FileExistsError:
+            # Rejoin storage_path elements and write results as txt file
+            with open(f"{head}/{sep}{tail}.txt", "w") as file:
+                file.write(results)
 
 
 if __name__ == "__main__":
@@ -264,4 +272,8 @@ if __name__ == "__main__":
     image_directory = "test_download"
     img = ImageReader()
     img.scan_folder(image_directory)
-    print(img.png_list)
+    image_list = img.png_list
+
+    for png in tqdm(image_list[5]):
+        png_text = img.extract_text(png)
+        img.store_text(results=png_text, filepath=png)
