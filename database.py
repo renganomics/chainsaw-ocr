@@ -1,4 +1,3 @@
-import os
 import sqlite3
 
 
@@ -7,17 +6,11 @@ class Database:
 
     def __init__(self, database_path):
         self.database_path = database_path
+        self.connection = sqlite3.connect(f"{self.database_path}.db")
+        self.cursor = self.connection.cursor()
 
-    def connect_database(self):
-        try:
-            # Establish connection and cursor using given path
-            with sqlite3.connect(f"{self.database_path}.db") as self.connection:
-                self.cursor = self.connection.cursor()
-        except ConnectionError as e:
-            return f"Database {self.database_path} does not exist. Error: {e}"
-
-    def create_database(self):
-        pass
+    # def create_database(self):
+    #     pass
 
     # Create table using given info and commit changes
     def create_table(self, name, columns):
