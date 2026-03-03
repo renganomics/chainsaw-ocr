@@ -9,17 +9,15 @@ class Database:
         self.connection = sqlite3.connect(f"{self.database_path}.db")
         self.cursor = self.connection.cursor()
 
-    # def create_database(self):
-    #     pass
-
     # Create table using given info and commit changes
     def create_table(self, name, columns):
         try:
-            self.cursor.execute(f"CREATE TABLE {name} ({columns})")
+            self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {name} ({columns})")
             self.connection.commit()
             print(f"table {name} successfully created")
         except sqlite3.OperationalError as e:
             print(e)
+            return []  # Return empty list to avoid None error
 
     # Insert given info to table of choice and commit changes
     def insert_data(self, table, columns, data):
@@ -34,6 +32,7 @@ class Database:
             self.connection.commit()
         except sqlite3.OperationalError as e:
             print(e)
+            return []
 
     # Retrieve relevant data from chosen table and columns
     def retrieve_data(self, table, columns):
@@ -42,3 +41,4 @@ class Database:
             return table_data.fetchall()
         except sqlite3.OperationalError as e:
             print(e)
+            return []

@@ -1,28 +1,31 @@
-# What is Chainsaw-OCR?
+# Chainsaw-OCR
 
-Chainsaw-OCR is an in-progress application with the goal to allow users to
-download images from the MangaDex API, scan them for text, store the results and
-perform searches for phrases within said results. It is a personal project of
-mine that serves as a pass-time as well as a chance for me to practice my
-developing Python knowledge.
+Chainsaw-OCR is a Python command-line application that retrieves manga chapter
+data via the MangaDex API, downloads associated page images, performs OCR text
+extraction, and stores results for search and analysis.
 
-## Why Make This?
+This project was built to explore API interaction, database design, file system
+automation, and OCR processing in a practical, end-to-end workflow.
 
-For the past 3 years I have been a massive fan of the ongoing manga series
-Chainsaw Man. About 2 months ago, while scrolling through the series' dedicated
-subreddit, I came across a fan theory that sparked my interest, but for it to
-hold any credit, I would need to look through for the mention of a certain
-phrase. Now I imagine you may have noticed the language I'm using is very
-cryptic, and that is for two reasons:
+## Features
 
-1. It would take much longer than your time is worth for me to explain in detail
-the theory and the reasoning behind the chosen phrase in question.
-2. All in all it doesn't make much difference to the purpose of the app, aside
-from it's current working name, "Chainsaw-OCR".
+- Retrieves structured chapter metadata via the MangaDex API
+- Stores chapter and page data in an SQLite database
+- Automates bulk image downloading and directory organisation
+- Extracts text from images using OCR
+- Designed for future expansion into searchable text queries
 
-Because of these two reasons, I will be including the link to the theory below,
-however as i mentioned I first saw this months ago and at this time am unable to
-find it, but I'll make sure to update this once I do!
+## Technologies Used
 
-**All in all, thank you for reading, and feel free to get in touch with any
-feedback or questions!**
+- Python
+- SQLite
+- MangaDex API
+- Git
+- Linux (developed and tested in Arch)
+
+## Why Build This?
+
+This project began as a curiosity-driven experiment and evolved into a hands-on
+exercise in building a small data pipeline. The goal was to practice working
+with external APIs, persistent data storage, file handling, and text extraction
+within a command-line environment

@@ -46,7 +46,7 @@ class MangaDexRequests:
     # Add rate limit with extra 5-second buffer and retry after rest period
     @sleep_and_retry
     @limits(calls=40, period=65)
-    def get_page_metadata(self, _chapter_id):
+    def get_page_metadata(self, _chapter_id) -> list[str]:
         try:
             metadata = requests.get(f"{BASE_URL}/at-home/server/{_chapter_id}")
 
@@ -62,6 +62,7 @@ class MangaDexRequests:
             return self.page_links
         except requests.exceptions.ConnectionError as e:
             print(e)
+            return []  # Retrun empty list to avoid NoneType error
 
     @staticmethod
     def download_url(image_url, filepath, filename):
