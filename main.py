@@ -1,11 +1,11 @@
-from services.mangadex import MangaDexRequests
+from services.mangadex import MDXRequestHandler
 
 
-def main():
+def main() -> None:
     title = input("Please enter a manga title: ").strip()
     language = input("Please enter a language: ").strip().lower() or "en"
 
-    client = MangaDexRequests()
+    client = MDXRequestHandler()
     results = client.search_manga(title, language)
     filtered = client.filter_by_language(results, language)
 
